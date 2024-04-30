@@ -20,7 +20,7 @@ class _LoginState extends State<Login> {
           children: [
             SizedBox(width: 25),
             CircleAvatar(
-              backgroundColor: Colors.blue,
+              backgroundColor: Colors.orangeAccent,
               radius: 35,
               child: Text('A'),
             ),

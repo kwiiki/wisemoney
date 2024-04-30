@@ -72,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 45,
                   decoration: BoxDecoration(
-                      color: Colors.lightBlueAccent,
+                      color: Colors.orangeAccent,
                       borderRadius: BorderRadius.circular(10)),
                   child: Center(
                     child: _isSigning
@@ -109,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text(
                       "Sign up",
                       style: TextStyle(
-                          color: Colors.blue, fontWeight: FontWeight.bold),
+                          color: Colors.orangeAccent, fontWeight: FontWeight.bold),
                     ),
                   )
                 ],

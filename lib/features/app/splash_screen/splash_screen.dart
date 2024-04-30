@@ -27,7 +27,7 @@ class _SplacshScreenState extends State<SplacshScreen> {
       body: Center(
         child: Text(
           "Welcome to MoneyWise",
-          style: TextStyle(color: Colors.lightBlue, fontSize: 25),
+          style: TextStyle(color: Colors.orangeAccent, fontSize: 25),
         ),
       ),
     );
