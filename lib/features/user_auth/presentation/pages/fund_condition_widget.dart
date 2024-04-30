@@ -54,7 +54,7 @@ class FundCondition extends StatelessWidget {
                 child: Text(
                   "₸$amount",
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Color.fromARGB(255, 14, 16, 41),
                   ),

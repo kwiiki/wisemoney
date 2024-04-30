@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:wisemoney/features/app/splash_screen/splash_screen.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/login_page.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:wisemoney/features/user_auth/presentation/pages/expense_model.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +16,9 @@ Future main() async {
             messagingSenderId: "336143621268",
             projectId: "flutter-firebase-e722f"));
   }
+  await Hive.initFlutter();
+  Hive.registerAdapter(ExpenseModelAdapter());
+  await Hive.openBox<ExpenseModel>('expenses');
   await Firebase.initializeApp();
   runApp(const MyApp());
 }

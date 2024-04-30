@@ -8,7 +8,7 @@ import 'package:wisemoney/features/user_auth/firebase_auth_implementation/fireba
 import 'package:wisemoney/features/user_auth/presentation/pages/login_page.dart';
 import 'package:wisemoney/features/user_auth/presentation/widgets/FormContainerWidget.dart';
 
-import 'home_page.dart';
+import 'menu.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});

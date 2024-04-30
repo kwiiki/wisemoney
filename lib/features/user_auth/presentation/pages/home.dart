@@ -1,10 +1,9 @@
-
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/expense_model.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/fund_condition_widget.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/item.dart';
-
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,12 +12,13 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomePageState();
 }
 
-List options = ["расход", "доход"];
+List options = ["Expense", "Income"];
 List<ExpenseModel> expenses = [];
 
 class _HomePageState extends State<Home> {
   final itemController = TextEditingController();
   final amountController = TextEditingController();
+  late final Box<ExpenseModel> _expensesBox;
   int amount = 0;
   final dateController = TextEditingController();
   int totalMoney = 0;
@@ -26,6 +26,49 @@ class _HomePageState extends State<Home> {
   int income = 0;
   DateTime? pickedDate;
   String currentOption = options[0];
+
+  @override
+  void initState() {
+    super.initState();
+    _expensesBox = Hive.box('expenses');
+    _loadExpenses();
+  }
+
+  void _loadExpenses() {
+    expenses = _expensesBox.values.toList();
+    _calculateTotals();
+  }
+
+  void _saveExpense(ExpenseModel expense) {
+    _expensesBox.add(expense);
+    setState(() {
+      expenses.add(expense);
+      _calculateTotals();
+    });
+  }
+
+  void _deleteExpense(ExpenseModel expense) {
+    _expensesBox.delete(expense.key);
+    setState(() {
+      expenses.remove(expense);
+      _calculateTotals();
+    });
+  }
+
+  void _calculateTotals() {
+    totalMoney = 0;
+    spentMoney = 0;
+    income = 0;
+    for (var expense in expenses) {
+      if (expense.isIncome) {
+        income += expense.amount;
+      } else {
+        spentMoney += expense.amount;
+      }
+    }
+    totalMoney = income - spentMoney;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,37 +86,51 @@ class _HomePageState extends State<Home> {
                   child: AlertDialog(
                     title: const Padding(
                       padding: EdgeInsets.only(left: 1.6),
-                      child: Text("Добавить запись"),
+                      child: Text("Add Entry"),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () {
-                          amount = int.parse(amountController.text);
-                          // adding a new item
-                          final expense = ExpenseModel(
-                            item: itemController.text,
-                            amount: amount,
-                            isIncome: currentOption == "доход" ? true : false,
-                            date: pickedDate!,
-                          );
-                          expenses.add(expense);
-                          if (expense.isIncome) {
-                            income += expense.amount;
-                            totalMoney += expense.amount;
-                            setState(() {});
-                          } else if (!expense.isIncome) {
-                            spentMoney += expense.amount;
-                            totalMoney -= expense.amount;
-                            setState(() {});
-                          }
+                          if (amountController.text.isNotEmpty &&
+                              itemController.text.isNotEmpty &&
+                              pickedDate != null) {
+                            amount = int.parse(amountController.text);
+                            final expense = ExpenseModel(
+                              item: itemController.text,
+                              amount: amount,
+                              isIncome:
+                                  currentOption == "Income" ? true : false,
+                              date: pickedDate!,
+                            );
+                            _saveExpense(expense);
 
-                          itemController.clear();
-                          amountController.clear();
-                          dateController.clear();
-                          Navigator.pop(context);
+                            itemController.clear();
+                            amountController.clear();
+                            dateController.clear();
+                            Navigator.pop(context);
+                          } else {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text("Error"),
+                                  content: const Text(
+                                      "Please fill in all the required fields."),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text("OK"),
+                                    )
+                                  ],
+                                );
+                              },
+                            );
+                          }
                         },
                         child: const Text(
-                          "Добавить",
+                          "Add",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -85,7 +142,7 @@ class _HomePageState extends State<Home> {
                           Navigator.pop(context);
                         },
                         child: const Text(
-                          "Отменить",
+                          "Cancel",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -101,7 +158,7 @@ class _HomePageState extends State<Home> {
                           TextField(
                             controller: itemController,
                             decoration: const InputDecoration(
-                              hintText: "Название",
+                              hintText: "Item Name",
                               hintStyle: TextStyle(
                                 color: Colors.blueGrey,
                               ),
@@ -113,7 +170,7 @@ class _HomePageState extends State<Home> {
                             controller: amountController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              hintText: "Сумма",
+                              hintText: "Amount",
                               hintStyle: TextStyle(
                                 color: Colors.blueGrey,
                               ),
@@ -125,7 +182,6 @@ class _HomePageState extends State<Home> {
                             alignment: Alignment.centerLeft,
                             child: TextField(
                               onTap: () async {
-                                // user can pick date
                                 pickedDate = await showDatePicker(
                                   context: context,
                                   initialDate: DateTime.now(),
@@ -139,7 +195,7 @@ class _HomePageState extends State<Home> {
                               },
                               controller: dateController,
                               decoration: const InputDecoration(
-                                labelText: "Дата",
+                                labelText: "Date",
                                 hintStyle: TextStyle(
                                   color: Colors.blueGrey,
                                 ),
@@ -170,7 +226,7 @@ class _HomePageState extends State<Home> {
                             child: const Padding(
                               padding: EdgeInsets.only(left: 12),
                               child: Text(
-                                "Расходы",
+                                "Expense",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15.4,
@@ -190,7 +246,7 @@ class _HomePageState extends State<Home> {
                             child: const Padding(
                               padding: EdgeInsets.only(left: 12),
                               child: Text(
-                                "Доходы",
+                                "Income",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15.4,
@@ -220,7 +276,7 @@ class _HomePageState extends State<Home> {
                 Padding(
                   padding: const EdgeInsets.only(left: 5, right: 8),
                   child: FundCondition(
-                    type: "Доход",
+                    type: "Income",
                     amount: "$income",
                     icon: "grey",
                   ),
@@ -228,7 +284,7 @@ class _HomePageState extends State<Home> {
                 Padding(
                   padding: const EdgeInsets.only(left: 5),
                   child: FundCondition(
-                    type: "Расход",
+                    type: "Expense",
                     amount: "$spentMoney",
                     icon: "orange",
                   ),
@@ -236,7 +292,7 @@ class _HomePageState extends State<Home> {
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: FundCondition(
-                    type: "Баланс",
+                    type: "Balance",
                     amount: "$totalMoney",
                     icon: "blue",
                   ),
@@ -255,18 +311,20 @@ class _HomePageState extends State<Home> {
                         builder: (context) {
                           return AlertDialog(
                             title: const Text(
-                              "Вы точно хотите удалить данный товар?",
+                              "Delete Entry",
                               style: TextStyle(
                                 fontSize: 19.0,
                               ),
                             ),
+                            content: const Text(
+                                "Are you sure you want to delete this entry?"),
                             actions: [
                               TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
                                 child: const Text(
-                                  "Отменить",
+                                  "Cancel",
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -276,21 +334,11 @@ class _HomePageState extends State<Home> {
                               TextButton(
                                 onPressed: () {
                                   final myExpense = expenses[index];
-                                  if (myExpense.isIncome) {
-                                    income -= myExpense.amount;
-                                    totalMoney -= myExpense.amount;
-                                    setState(() {});
-                                  } else if (!myExpense.isIncome) {
-                                    spentMoney -= myExpense.amount;
-                                    totalMoney += myExpense.amount;
-                                    setState(() {});
-                                  }
-                                  expenses.remove(myExpense);
-                                  setState(() {});
+                                  _deleteExpense(myExpense);
                                   Navigator.pop(context);
                                 },
                                 child: const Text(
-                                  "Удалить",
+                                  "Delete",
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
