@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:wisemoney/features/user_auth/presentation/pages/rate_app_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -62,15 +64,15 @@ class _LoginState extends State<Login> {
                             fontSize: 20,
                             letterSpacing: -1,
                             fontWeight: FontWeight.bold)),
-                    Icons.add),
+                    Icons.add, ''),
                 const SizedBox(height: 15),
                 listViewContainer(
-                    getOptionsTitle('Рекомендовать друзьям'), Icons.share),
+                    getOptionsTitle('Рекомендовать друзьям'), Icons.share, 'share'),
+                listViewContainerForRating(
+                    getOptionsTitle('Оцените приложение'), Icons.star, 'rate_app'),
                 listViewContainer(
-                    getOptionsTitle('Оцените приложение'), Icons.star),
-                listViewContainer(
-                    getOptionsTitle('Блокировать рекламу'), Icons.block),
-                listViewContainer(getOptionsTitle('Настройки'), Icons.settings),
+                    getOptionsTitle('Блокировать рекламу'), Icons.block, ''),
+                listViewContainer(getOptionsTitle('Настройки'), Icons.settings, ''),
               ],
             ),
           ),
@@ -79,18 +81,58 @@ class _LoginState extends State<Login> {
     );
   }
 
-  Container listViewContainer(Text text, IconData icon) {
-    return Container(
-      height: 65,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        border: Border.all(color: CupertinoColors.systemGrey6),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: ListTile(
+  GestureDetector listViewContainer(Text text, IconData icon, String route) {
+    return GestureDetector(
+      onTap: () {
+        if (route == 'share') {
+          // Генерируем ссылку для рекомендации
+          String shareLink = 'https://example.com/app?referral=john_doe';
+
+          // Вызываем диалог для отправки ссылки
+          Share.share(shareLink, subject: 'Check out this app!');
+        }
+      },
+      child: Container(
+        height: 65,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          border: Border.all(color: CupertinoColors.systemGrey6),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: ListTile(
           leading: listTileLeading(icon),
           title: text,
-          trailing: listTileRightArrow()),
+          trailing: listTileRightArrow(),
+        ),
+      ),
+    );
+  }
+
+
+    GestureDetector listViewContainerForRating(Text text, IconData icon, String route) {
+    return GestureDetector(
+      onTap: () {
+        if (route == 'rate_app') {
+          // Навигация на новую страницу
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => RateAppScreen()),
+          );
+        }
+      },
+      child: Container(
+        height: 65,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          border: Border.all(color: CupertinoColors.systemGrey6),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: ListTile(
+          leading: listTileLeading(icon),
+          title: text,
+          trailing: listTileRightArrow(),
+        ),
+      ),
     );
   }
 

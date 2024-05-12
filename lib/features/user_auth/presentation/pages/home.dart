@@ -25,7 +25,7 @@ class _HomePageState extends State<Home> {
   int spentMoney = 0;
   int income = 0;
   DateTime? pickedDate;
-  String currentOption = options[0];
+  String currentOption = "Expense"; // Инициализируем со значением "Expense"
 
   @override
   void initState() {
@@ -33,7 +33,6 @@ class _HomePageState extends State<Home> {
     _expensesBox = Hive.box('expenses');
     _loadExpenses();
   }
-
   void _loadExpenses() {
     expenses = _expensesBox.values.toList();
     _calculateTotals();
@@ -217,42 +216,26 @@ class _HomePageState extends State<Home> {
                             ),
                           ),
                           const SizedBox(height: 15),
-                          RadioMenuButton(
-                            value: options[0],
+
+                          RadioListTile(
+                            title: const Text("Expense"),
+                            value: "Expense",
                             groupValue: currentOption,
-                            onChanged: (expense) {
-                              currentOption = expense.toString();
+                            onChanged: (value) {
+                              setState(() {
+                                currentOption = value!;
+                              });
                             },
-                            child: const Padding(
-                              padding: EdgeInsets.only(left: 12),
-                              child: Text(
-                                "Expense",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15.4,
-                                ),
-                              ),
-                            ),
                           ),
-                          RadioMenuButton(
-                            style: ButtonStyle(
-                              iconSize: MaterialStateProperty.all(20),
-                            ),
-                            value: options[1],
+                          RadioListTile(
+                            title: const Text("Income"),
+                            value: "Income",
                             groupValue: currentOption,
-                            onChanged: (income) {
-                              currentOption = income.toString();
+                            onChanged: (value) {
+                              setState(() {
+                                currentOption = value!;
+                              });
                             },
-                            child: const Padding(
-                              padding: EdgeInsets.only(left: 12),
-                              child: Text(
-                                "Income",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15.4,
-                                ),
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -354,7 +337,7 @@ class _HomePageState extends State<Home> {
                       expense: ExpenseModel(
                         item: expenses[index].item,
                         amount: expenses[index].amount,
-                        isIncome: expenses[index].isIncome,
+                        isIncome: currentOption == "Income" ? true : false,
                         date: expenses[index].date,
                       ),
                       onDelete: () {},

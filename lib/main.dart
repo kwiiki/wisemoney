@@ -5,6 +5,7 @@ import 'package:wisemoney/features/app/splash_screen/splash_screen.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/login_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/expense_model.dart';
+import 'package:wisemoney/features/user_auth/presentation/pages/menu.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       home: SplacshScreen(
-        child: LoginPage(),
+        child: HomePage(),
       ),
     );
   }

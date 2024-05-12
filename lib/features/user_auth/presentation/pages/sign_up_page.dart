@@ -135,7 +135,7 @@ class _SignUpPageState extends State<SignUpPage> {
       _usernameError = false;
       _emailError = false;
       _passwordError = false;
-      _emailErrorMessage = null; // Сбросить предыдущее сообщение об ошибке
+      _emailErrorMessage = null;
     });
 
     String username = _usernameController.text.trim();
@@ -157,7 +157,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
       if (user != null) {
         print("User is successfully signed up");
-        // Add any additional logic for successful sign up
       } else {
         setState(() {
           _emailError = true;
