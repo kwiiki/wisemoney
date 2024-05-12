@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
-import 'package:wisemoney/features/user_auth/presentation/pages/expense_model.dart';
-import 'package:wisemoney/features/user_auth/presentation/pages/fund_condition_widget.dart';
-import 'package:wisemoney/features/user_auth/presentation/pages/item.dart';
+import 'expense_model.dart';
+import 'fund_condition_widget.dart';
+import 'item.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -24,15 +25,17 @@ class _HomePageState extends State<Home> {
   int totalMoney = 0;
   int spentMoney = 0;
   int income = 0;
-  DateTime? pickedDate;
-  String currentOption = "Expense"; // Инициализируем со значением "Expense"
+  String currentOption = options[0];
+  String dialogOption = options[0];
 
   @override
   void initState() {
     super.initState();
     _expensesBox = Hive.box('expenses');
     _loadExpenses();
+    _setCurrentDate();
   }
+
   void _loadExpenses() {
     expenses = _expensesBox.values.toList();
     _calculateTotals();
@@ -68,6 +71,12 @@ class _HomePageState extends State<Home> {
     totalMoney = income - spentMoney;
   }
 
+  void _setCurrentDate() {
+    final now = DateTime.now();
+    String date = DateFormat.yMMMMd().format(now);
+    dateController.text = date;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,22 +99,32 @@ class _HomePageState extends State<Home> {
                     actions: [
                       TextButton(
                         onPressed: () {
-                          if (amountController.text.isNotEmpty &&
-                              itemController.text.isNotEmpty &&
-                              pickedDate != null) {
-                            amount = int.parse(amountController.text);
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          if (itemController.text.isNotEmpty &&
+                              amountController.text.isNotEmpty &&
+                              double.tryParse(amountController.text) != null) {
+                            double amount = double.parse(amountController.text);
                             final expense = ExpenseModel(
                               item: itemController.text,
-                              amount: amount,
-                              isIncome:
-                                  currentOption == "Income" ? true : false,
-                              date: pickedDate!,
+                              amount: amount.toInt(),
+                              isIncome: dialogOption == "Income" ? true : false,
+                              date: DateTime.now(),
                             );
                             _saveExpense(expense);
 
                             itemController.clear();
                             amountController.clear();
-                            dateController.clear();
                             Navigator.pop(context);
                           } else {
                             showDialog(
@@ -114,7 +133,7 @@ class _HomePageState extends State<Home> {
                                 return AlertDialog(
                                   title: const Text("Error"),
                                   content: const Text(
-                                      "Please fill in all the required fields."),
+                                      "Please enter a valid amount and fill in all the required fields."),
                                   actions: [
                                     TextButton(
                                       onPressed: () {
@@ -136,21 +155,9 @@ class _HomePageState extends State<Home> {
                           ),
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
                     ],
                     content: SizedBox(
-                      height: 340,
+                      height: 250,
                       width: 400,
                       child: Column(
                         children: [
@@ -167,75 +174,63 @@ class _HomePageState extends State<Home> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: amountController,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}')),
+                            ],
                             decoration: const InputDecoration(
-                              hintText: "Amount",
-                              hintStyle: TextStyle(
-                                color: Colors.blueGrey,
+                              hintText: "Amount ",
+                              helperText: "Enter a valid amount with number",
+                              helperStyle: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
                               ),
                               border: OutlineInputBorder(),
                             ),
                           ),
-                          const SizedBox(height: 18),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextField(
-                              onTap: () async {
-                                pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                String date =
-                                    DateFormat.yMMMMd().format(pickedDate!);
-                                dateController.text = date;
-                                setState(() {});
-                              },
-                              controller: dateController,
-                              decoration: const InputDecoration(
-                                labelText: "Date",
-                                hintStyle: TextStyle(
-                                  color: Colors.blueGrey,
-                                ),
-                                filled: true,
-                                prefixIcon: Icon(Icons.calendar_today),
-                                prefixIconColor: Colors.blue,
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.blue,
-                                  ),
+                          const SizedBox(height: 10),
+                          RadioMenuButton(
+                            value: options[0],
+                            groupValue: dialogOption,
+                            onChanged: (expense) {
+                              setState(() {
+                                dialogOption = expense.toString();
+                              });
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.only(left: 12),
+                              child: Text(
+                                "Expense",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15.4,
                                 ),
                               ),
-                              readOnly: true,
                             ),
                           ),
-                          const SizedBox(height: 15),
-
-                          RadioListTile(
-                            title: const Text("Expense"),
-                            value: "Expense",
-                            groupValue: currentOption,
-                            onChanged: (value) {
+                          RadioMenuButton(
+                            style: ButtonStyle(
+                              iconSize: MaterialStateProperty.all(20),
+                            ),
+                            value: options[1],
+                            groupValue: dialogOption,
+                            onChanged: (income) {
                               setState(() {
-                                currentOption = value!;
+                                dialogOption = income.toString();
                               });
                             },
-                          ),
-                          RadioListTile(
-                            title: const Text("Income"),
-                            value: "Income",
-                            groupValue: currentOption,
-                            onChanged: (value) {
-                              setState(() {
-                                currentOption = value!;
-                              });
-                            },
+                            child: const Padding(
+                              padding: EdgeInsets.only(left: 12),
+                              child: Text(
+                                "Income",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15.4,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -337,7 +332,7 @@ class _HomePageState extends State<Home> {
                       expense: ExpenseModel(
                         item: expenses[index].item,
                         amount: expenses[index].amount,
-                        isIncome: currentOption == "Income" ? true : false,
+                        isIncome: expenses[index].isIncome,
                         date: expenses[index].date,
                       ),
                       onDelete: () {},
