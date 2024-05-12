@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/rate_app_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../widgets/UserBalanceWidget.dart';
+
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -11,43 +13,49 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  double userBalance = 100.0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.orangeAccent,
         toolbarHeight: 150,
-        title: const Row(
+        title: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(width: 25),
-            CircleAvatar(
+            const SizedBox(width: 25),
+            const CircleAvatar(
               backgroundColor: Colors.blue,
               radius: 35,
               child: Text('A'),
             ),
-            SizedBox(width: 25),
+            const SizedBox(width: 25),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    Text('John',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 25)),
+                    Text(
+                      'John',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
+                      ),
+                    ),
                     SizedBox(width: 5),
-                    Text('Doe',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 25)),
+                    Text(
+                      'Doe',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
+                      ),
+                    ),
                   ],
                 ),
-                Row(
-                  children: [Text('ID:000000', style: TextStyle(fontSize: 15))],
-                )
+                UserBalanceWidget(userBalance: userBalance),
               ],
             )
           ],
@@ -70,9 +78,10 @@ class _LoginState extends State<Login> {
                     getOptionsTitle('Рекомендовать друзьям'), Icons.share, 'share'),
                 listViewContainerForRating(
                     getOptionsTitle('Оцените приложение'), Icons.star, 'rate_app'),
-                listViewContainer(
-                    getOptionsTitle('Блокировать рекламу'), Icons.block, ''),
+                listViewContainerForBlocADS(
+                    getOptionsTitle('Блокировать рекламу'), Icons.block, 'block_ads'),
                 listViewContainer(getOptionsTitle('Настройки'), Icons.settings, ''),
+                const SizedBox(height: 15),
               ],
             ),
           ),
@@ -81,14 +90,34 @@ class _LoginState extends State<Login> {
     );
   }
 
+  GestureDetector listViewContainerForBlocADS(Widget title, IconData icon, String tag) {
+    return GestureDetector(
+      onTap: () {
+        if (tag == 'block_ads') {
+          showBlockAdsDialog();
+        }
+      },
+      child: Container(
+        height: 65,
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          border: Border.all(color: CupertinoColors.systemGrey6),
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: ListTile(
+          leading: listTileLeading(icon),
+          title: title,
+          trailing: listTileRightArrow(),
+        ),
+      ),
+    );
+  }
   GestureDetector listViewContainer(Text text, IconData icon, String route) {
     return GestureDetector(
       onTap: () {
         if (route == 'share') {
-          // Генерируем ссылку для рекомендации
           String shareLink = 'https://example.com/app?referral=john_doe';
 
-          // Вызываем диалог для отправки ссылки
           Share.share(shareLink, subject: 'Check out this app!');
         }
       },
@@ -156,5 +185,56 @@ class _LoginState extends State<Login> {
     return Text(s,
         style: const TextStyle(
             fontSize: 18, letterSpacing: -1, color: Colors.black54));
+  }
+  void showBlockAdsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Блокировать рекламу'),
+          content: const Text('Вы хотите заблокировать рекламу за \$4.99?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Закрыть диалог
+              },
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (userBalance >= 4.99) {
+                  // Вычитаем стоимость блокировки рекламы из баланса пользователя
+                  setState(() {
+                    userBalance -= 4.99;
+                  });
+                  // Здесь вы можете реализовать логику для блокировки рекламы
+                  Navigator.of(context).pop(); // Закрыть диалог
+                } else {
+                  // Показать сообщение о недостаточном балансе
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Недостаточно средств'),
+                        content: const Text('У вас недостаточно средств для блокировки рекламы.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Закрыть диалог
+                            },
+                            child: const Text('ОК'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+              },
+              child: const Text('Купить'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
