@@ -24,6 +24,9 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
 
+  bool _emailError = false;
+  bool _passwordError = false;
+  String? _passwordErrorMessage;
 
   @override
   void dispose() {
@@ -39,11 +42,11 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text("Login"),
+        title: const Text("Login"),
       ),
       body: Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -54,16 +57,18 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(
                 height: 30,
               ),
-               FormContainerWidget(
+              FormContainerWidget(
                 controller: _emailController,
                 hintText: "Email",
                 isPasswordField: false,
+                hasError: _emailError,
               ),
               const SizedBox(height: 10),
-               FormContainerWidget(
+              FormContainerWidget(
                 controller: _passwordController,
                 hintText: "Password",
                 isPasswordField: true,
+                hasError: _passwordError,
               ),
               const SizedBox(height: 30),
               GestureDetector(
@@ -77,26 +82,26 @@ class _LoginPageState extends State<LoginPage> {
                   child: Center(
                     child: _isSigning
                         ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
+                      color: Colors.white,
+                    )
                         : const Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      "Login",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account?"),
-                  SizedBox(
+                  const Text("Don't have an account?"),
+                  const SizedBox(
                     width: 5,
                   ),
                   GestureDetector(
@@ -109,7 +114,8 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text(
                       "Sign up",
                       style: TextStyle(
-                          color: Colors.orangeAccent, fontWeight: FontWeight.bold),
+                          color: Colors.orangeAccent,
+                          fontWeight: FontWeight.bold),
                     ),
                   )
                 ],
@@ -121,17 +127,53 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _signIn() async{
-    String email = _emailController.text;
+  void _signIn() async {
+    setState(() {
+      _isSigning = true;
+      _emailError = false;
+      _passwordError = false;
+       _passwordErrorMessage = null;
+    });
+
+    String email = _emailController.text.trim();
     String password = _passwordController.text;
 
-    User? user = await _auth.signInWithEmailAndPassword(email, password);
+    // Check if the email is valid
+    bool isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(
+        email);
 
-    if (user != null) {
-      print("User is successfully signedIn");
-      Navigator.push(context, MaterialPageRoute(builder: (context)=>const HomePage()));
-    } else {
-      print("Some error happend");
+    if (email.isEmpty || password.isEmpty || !isEmailValid) {
+      setState(() {
+        _emailError = email.isEmpty || !isEmailValid;
+        _passwordError = password.isEmpty;
+        _isSigning = false;
+      });
+      return;
+    }
+
+    try {
+      User? user = await _auth.signInWithEmailAndPassword(email, password);
+
+      if (user != null) {
+        print("User is successfully signed in");
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        setState(() {
+          _passwordError = true;
+          _emailError = true;
+          _isSigning = false;
+          _passwordErrorMessage = "Incorrect email or password";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _emailError = true;
+        _passwordError = true;
+        _isSigning = false;
+      });
     }
   }
 }

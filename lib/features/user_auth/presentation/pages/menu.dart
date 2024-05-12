@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/charts.dart';
 import 'package:wisemoney/features/user_auth/presentation/pages/home.dart';
-import 'package:wisemoney/features/user_auth/presentation/pages/login.dart';
+import 'package:wisemoney/features/user_auth/presentation/pages/profile.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
