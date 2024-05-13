@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       home: SplacshScreen(
-        child: HomePage(),
+        child: LoginPage(),
       ),
     );
   }
